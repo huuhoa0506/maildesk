@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title th:text="${reminding.name + ' · Maildesk'}">Reminding · Maildesk</title><link rel="stylesheet" th:href="@{/css/dashboard.css}"><script th:src="@{/js/dashboard.js}" defer></script></head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+        <a class="brand" th:href="@{/}"><span class="brand-mark">✉</span><span class="brand-copy"><strong>mail<span>desk</span></strong><small>QUẢN LÝ EMAIL HỌC ĐƯỜNG</small></span></a>
+        <div class="section-heading">TRƯỜNG CỦA TÔI</div>
+        <nav class="school-nav"><a class="school-link" th:each="item : ${schools}" th:classappend="${item.id == school.id} ? ' is-active' : ''" th:href="@{/(schoolId=${item.id})}"><span class="school-icon" th:text="${item.initials}">TP</span><span class="school-copy"><strong th:text="${item.name}">Tên trường</strong><small th:text="${item.senderEmail}">email@school.edu.vn</small></span><span class="active-dot"></span></a></nav>
+        <div class="sidebar-bottom"><a class="settings-link" th:href="@{/schools}"><span>⚙</span> Quản lý trường <span class="settings-arrow">↗</span></a></div>
+    </aside>
+    <main class="main-content">
+        <header class="topbar"><div class="breadcrumbs"><a th:href="@{/(schoolId=${school.id})}" th:text="${school.name}">Trường</a><span>/</span><strong th:text="${reminding.name}">Reminding</strong></div><a class="top-link" th:href="@{/(schoolId=${school.id})}">← Các Reminding</a></header>
+        <div class="page-content">
+            <div class="flash success" th:if="${success}" th:text="${success}"></div><div class="flash error" th:if="${error}" th:text="${error}"></div>
+            <div class="flash warning" th:if="${mailLogMode}">Đang ở chế độ log: email được render và ghi vào log ứng dụng, không gửi thật. Nếu render thành công, trạng thái sẽ chuyển thành Đã gửi để bạn kiểm thử luồng và thống kê. Nội dung email và địa chỉ người nhận sẽ xuất hiện trong log.</div>
+            <div class="flash warning" th:if="${importWarnings}"><strong>Đã bỏ qua một số dòng Excel:</strong><ul><li th:each="warning : ${importWarnings}" th:text="${warning}">Dòng lỗi</li></ul></div>
+            <section class="page-heading">
+                <div><div class="eyebrow"><span class="eyebrow-dot"></span> REMINDING · <span th:text="${#strings.substring(reminding.createdAt, 0, 10)}">Ngày tạo</span></div><h1 th:text="${reminding.name}">Tên Reminding</h1><p class="page-description">Danh sách Agent nhận email và trạng thái gửi của đợt thông báo này.</p></div>
+                <div class="sender-badge"><small>NGƯỜI GỬI ĐÃ CHỤP LẠI</small><strong th:text="${reminding.senderEmail}">email@school.edu.vn</strong></div>
+            </section>
+            <section class="panel job-progress" id="mail-job-progress" th:if="${mailJob != null}"
+                     th:attr="data-progress-url=@{/remindings/{id}/send-progress(id=${reminding.id})},data-active=${mailJob.active}">
+                <div class="panel-title"><div><h2>Tiến trình gửi</h2><p id="job-state" th:text="${mailJob.active} ? 'Tác vụ đang chạy nền' : 'Lượt gửi gần nhất đã hoàn tất'">Tác vụ gửi</p></div>
+                    <strong class="job-progress-count"><span id="job-processed" th:text="${mailJob.processed}">0</span>/<span id="job-total" th:text="${mailJob.total}">0</span></strong></div>
+                <div class="job-progress-content">
+                    <div class="progress-track"><span id="job-progress-bar" th:style="'width:' + ${mailJob.percentage} + '%'"></span></div>
+                    <div class="job-progress-stats"><span>Thành công <strong id="job-succeeded" th:text="${mailJob.succeeded}">0</strong></span><span>Lỗi <strong id="job-failed" th:text="${mailJob.failed}">0</strong></span><span id="job-progress-percent" th:text="${mailJob.percentage + '%'}">0%</span></div>
+                </div>
+            </section>
+            <section class="overview-grid detail-stats">
+                <article class="overview-card"><span class="overview-icon icon-purple">▤</span><span><small>TỔNG EMAIL / AGENT</small><strong id="agent-total-count" th:text="${reminding.totalCount}">0</strong><small>Agent nhận email</small></span></article>
+                <article class="overview-card"><span class="overview-icon icon-amber">◷</span><span><small>CHƯA GỬI</small><strong id="agent-pending-count" th:text="${reminding.pendingCount}">0</strong><small>Sẵn sàng gửi</small></span></article>
+                <article class="overview-card"><span class="overview-icon icon-green">✓</span><span><small>ĐÃ GỬI</small><strong id="agent-sent-count" th:text="${reminding.sentCount}">0</strong><small>Gửi thành công</small></span></article>
+                <article class="overview-card"><span class="overview-icon icon-red">!</span><span><small>GỬI LỖI</small><strong id="agent-failed-count" th:text="${reminding.failedCount}">0</strong><small>Có thể gửi lại</small></span></article>
+            </section>
+
+            <section class="panel">
+                <div class="panel-title table-panel-title"><div><h2>Danh sách Agent</h2><p>Mỗi Agent nhận một email kèm file Excel chứa các AgentRecord của mình.</p></div><div class="panel-actions"><label class="search-box"><span>⌕</span><input id="search-input" type="search" placeholder="Tìm Agent, email..."></label><select class="status-select" id="status-filter" aria-label="Lọc trạng thái"><option value="all">Tất cả trạng thái</option><option value="pending">Chưa gửi</option><option value="sent">Đã gửi</option><option value="failed">Gửi lỗi</option></select><label class="date-filter"><span>Ngày nhập</span><input id="date-filter" type="date" aria-label="Lọc theo ngày nhập"></label></div></div>
+                <form method="post" th:action="@{/remindings/{id}/send(id=${reminding.id})}" id="send-form" th:attr="data-busy=${mailJob != null and mailJob.active}">
+                    <div class="detail-action-bar"><label class="select-label"><input type="checkbox" id="select-all" th:disabled="${mailJob != null and mailJob.active}"> Chọn danh sách đang hiển thị</label><button class="button button-primary" id="send-button" type="submit" th:disabled="${mailJob != null and mailJob.active}">➤ Gửi đã chọn <span id="selected-count" class="button-count">0</span></button></div>
+                    <div class="table-wrap">
+                        <table class="email-table">
+                            <thead><tr><th class="check-column"></th><th>AGENT</th><th>EMAIL</th><th>TRẠNG THÁI</th><th>NGÀY NHẬP</th><th>LỖI</th></tr></thead>
+                            <tbody id="email-rows">
+                            <tr class="email-row" th:each="item : ${agentViews}" th:attr="data-status=${item.agent.status},data-search=${item.agent.name + ' ' + item.agent.email},data-date=${#strings.substring(item.agent.importedAt, 0, 10)}">
+                                <td class="check-column"><input class="row-checkbox" type="checkbox" name="agentIds" th:value="${item.agent.id}" th:disabled="${item.agent.status == 'sent' or item.agent.status == 'sending' or (mailJob != null and mailJob.active)}" th:attr="aria-label='Chọn ' + ${item.agent.name}"></td>
+                                <td><div class="recipient-cell"><span class="recipient-avatar avatar-violet" th:text="${item.initials}">AG</span><span class="recipient-copy"><strong th:text="${item.agent.name}">Tên Agent</strong><small th:text="${item.agent.recordCount + ' records'}">0 records</small></span></div></td>
+                                <td th:text="${item.agent.email}">agent@example.com</td>
+                                <td><span class="status-pill" th:classappend="${item.agent.status == 'sent'} ? ' pill-sent' : (${item.agent.status == 'failed'} ? ' pill-failed' : ' pill-pending')"><i></i><span th:text="${item.agent.status == 'sent'} ? 'Đã gửi' : (${item.agent.status == 'failed'} ? 'Gửi lỗi' : (${item.agent.status == 'sending'} ? 'Đang gửi' : 'Chưa gửi'))">Chưa gửi</span></span></td>
+                                <td class="date-text" th:text="${#strings.substring(item.agent.importedAt, 0, 10)}">Ngày</td>
+                                <td class="error-cell" th:text="${item.agent.errorMessage == null ? '—' : item.agent.errorMessage}">—</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        <div class="empty-state" id="empty-state" th:if="${#lists.isEmpty(agentViews)}"><div class="empty-symbol">✉</div><strong>Chưa có Agent trong đợt này</strong></div>
+                        <div class="empty-state" id="filtered-empty-state" hidden><div class="empty-symbol">⌕</div><strong>Không tìm thấy Agent phù hợp</strong></div>
+                    </div>
+                </form>
+            </section>
+
+            <section class="panel template-panel">
+                <div class="panel-title"><div><h2>Mẫu email của Reminding</h2><p>Thay đổi chỉ áp dụng cho email chưa gửi và email được gửi lại.</p></div><a class="button button-secondary" th:href="@{/remindings/{id}/edit(id=${reminding.id})}">Sửa nội dung</a></div>
+                <div class="template-content"><strong>Tiêu đề</strong><p th:text="${reminding.subjectTemplate}">Tiêu đề email</p><strong>Nội dung</strong><pre th:text="${reminding.bodyTemplate}">Nội dung email</pre></div>
+                <div class="attachment-line">📎 Mỗi Agent nhận file Excel riêng chứa các AgentRecord theo cấu trúc đầu ra cố định.</div>
+            </section>
+        </div>
+    </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Tạo Reminding · Maildesk</title><link rel="stylesheet" th:href="@{/css/dashboard.css}"></head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+        <a class="brand" th:href="@{/}"><span class="brand-mark">✉</span><span class="brand-copy"><strong>mail<span>desk</span></strong><small>QUẢN LÝ EMAIL HỌC ĐƯỜNG</small></span></a>
+        <div class="section-heading"><span>TRƯỜNG CỦA TÔI</span><span class="school-count" th:text="${school.initials}">TP</span></div>
+        <nav class="school-nav"><a class="school-link" th:each="item : ${schools}" th:classappend="${item.id == school.id} ? ' is-active' : ''" th:href="@{/(schoolId=${item.id})}"><span class="school-icon" th:text="${item.initials}">TP</span><span class="school-copy"><strong th:text="${item.name}">Tên trường</strong><small th:text="${item.senderEmail}">email@school.edu.vn</small></span><span class="active-dot"></span></a></nav>
+        <div class="sidebar-bottom"><a class="settings-link" th:href="@{/schools}"><span>⚙</span> Quản lý trường <span class="settings-arrow">↗</span></a></div>
+    </aside>
+    <main class="main-content">
+        <header class="topbar"><div class="breadcrumbs"><a th:href="@{/(schoolId=${school.id})}" th:text="${school.name}">Trường</a><span>/</span><strong>Tạo Reminding</strong></div><a class="top-link" th:href="@{/(schoolId=${school.id})}">← Trở về</a></header>
+        <div class="page-content narrow-content">
+            <div class="flash error" th:if="${error}" th:text="${error}"></div>
+            <section class="page-heading"><div><div class="eyebrow"><span class="eyebrow-dot"></span> ĐỢT THÔNG BÁO MỚI</div><h1>Tạo Reminding</h1><p class="page-description">Nhập file Agent và các Student record; hệ thống nhóm theo Agent Email, rồi gửi mỗi Agent một email kèm file Excel riêng.</p></div></section>
+            <form class="panel create-form" method="post" enctype="multipart/form-data" th:action="@{/remindings/preview}">
+                <input type="hidden" name="schoolId" th:value="${school.id}">
+                <div class="panel-title"><div><h2>1. Thông tin đợt gửi</h2><p>Địa chỉ người gửi: <strong th:text="${school.senderEmail}">email@school.edu.vn</strong></p></div></div>
+                <div class="form-stack">
+                    <label>Tên Reminding<input name="name" required placeholder="Ví dụ: Thông báo lịch thi tháng 11"></label>
+                    <label>File dữ liệu Agent (.xlsx)<input name="roster" type="file" accept=".xlsx" required><small>Sheet đầu tiên cần có cột Agent Email và đủ các cột theo mẫu đầu ra. Các dòng cùng email được gộp thành một Agent. <a th:href="@{/templates/agents.xlsx}">Tải file mẫu</a></small></label>
+                </div>
+                <div class="form-actions"><a class="button button-secondary" th:href="@{/(schoolId=${school.id})}">Hủy</a><button class="button button-primary" type="submit">Đọc Excel &amp; soạn email →</button></div>
+            </form>
+            <div class="security-note"><strong>Đính kèm:</strong> mỗi Agent nhận một file Excel riêng gồm các record của Agent đó, theo cấu trúc mẫu đầu ra. File được tạo khi xử lý gửi.</div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

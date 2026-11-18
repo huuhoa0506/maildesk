@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Sửa template · Maildesk</title><link rel="stylesheet" th:href="@{/css/dashboard.css}"><script th:src="@{/js/dashboard.js}" defer></script></head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+        <a class="brand" th:href="@{/}"><span class="brand-mark">✉</span><span class="brand-copy"><strong>mail<span>desk</span></strong><small>QUẢN LÝ EMAIL HỌC ĐƯỜNG</small></span></a>
+        <div class="section-heading">TRƯỜNG CỦA TÔI</div>
+        <nav class="school-nav"><a class="school-link" th:each="item : ${schools}" th:classappend="${item.id == school.id} ? ' is-active' : ''" th:href="@{/(schoolId=${item.id})}"><span class="school-icon" th:text="${item.initials}">TP</span><span class="school-copy"><strong th:text="${item.name}">Tên trường</strong><small th:text="${item.senderEmail}">email@school.edu.vn</small></span><span class="active-dot"></span></a></nav>
+        <div class="sidebar-bottom"><a class="settings-link" th:href="@{/schools}"><span>⚙</span> Quản lý trường <span class="settings-arrow">↗</span></a></div>
+    </aside>
+    <main class="main-content">
+        <header class="topbar"><div class="breadcrumbs"><a th:href="@{/(schoolId=${school.id})}" th:text="${school.name}">Trường</a><span>/</span><a th:href="@{/remindings/{id}(id=${reminding.id})}" th:text="${reminding.name}">Reminding</a><span>/</span><strong>Sửa template</strong></div><a class="top-link" th:href="@{/remindings/{id}(id=${reminding.id})}">← Trở về</a></header>
+        <div class="page-content">
+            <div class="flash error" th:if="${error}" th:text="${error}"></div>
+            <section class="page-heading"><div><div class="eyebrow"><span class="eyebrow-dot"></span> CHỈNH SỬA REMINDING</div><h1 th:text="${reminding.name}">Tên Reminding</h1><p class="page-description">Cập nhật template và xem trước với dữ liệu Agent của đợt này.</p></div></section>
+            <div class="flash warning"><strong>Lưu ý:</strong> nội dung mới áp dụng cho email chưa gửi và các lần gửi lại; email đã gửi không bị ảnh hưởng.</div>
+            <div class="compose-layout">
+                <form class="panel compose-form" method="post" th:action="@{/remindings/{id}/template(id=${reminding.id})}">
+                    <div class="panel-title"><div><h2>Nội dung email</h2><p>Người gửi: <strong th:text="${reminding.senderName + ' · ' + reminding.senderEmail}">Trường</strong></p></div></div>
+                    <div class="form-stack compose-fields">
+                        <label>Tiêu đề<input id="subject-template" name="subject" required th:value="${subject == null ? reminding.subjectTemplate : subject}"></label>
+                        <label>Nội dung<textarea id="body-template" name="body" rows="10" required th:text="${body == null ? reminding.bodyTemplate : body}"></textarea></label>
+                        <div class="variable-section"><strong>Chèn biến từ file Excel</strong><span>Nhấn cột để chèn biến tại vị trí con trỏ.</span><div class="variable-chips"><button class="variable-chip" th:each="column : ${columns}" type="button" th:attr="data-variable=${column}" th:text="${'{{' + column + '}}'}">{{Cột}}</button></div></div>
+                        <div class="form-actions"><a class="button button-secondary" th:href="@{/remindings/{id}(id=${reminding.id})}">Hủy</a><button class="button button-primary" type="submit">Lưu nội dung</button></div>
+                    </div>
+                </form>
+                <aside class="preview-column">
+                    <section class="panel preview-panel">
+                        <div class="panel-title"><div><h2>Xem trước email</h2><p>Mẫu dữ liệu: Agent đầu tiên</p></div></div>
+                        <div class="email-preview">
+                            <div class="preview-from"><span>ĐẾN AGENT</span><strong th:text="${sampleAgent.name + ' · ' + sampleAgent.email}">Agent</strong></div>
+                            <div class="preview-subject"><span>TIÊU ĐỀ</span><strong id="preview-subject">Tiêu đề email</strong></div>
+                            <div class="preview-body" id="preview-body">Nội dung email</div>
+                        </div>
+                        <div class="preview-data"><strong>Dữ liệu Excel mẫu</strong><div th:each="entry : ${sampleValues}" class="preview-data-row"><span th:text="${entry.key}" th:attr="data-sample-column=${entry.key}">Cột</span><span th:text="${entry.value}" th:attr="data-sample-value=${entry.value}">Giá trị</span></div></div>
+                        <div class="preview-attachment" th:if="${reminding.attachmentName != null}"><span>📎</span><span th:text="${reminding.attachmentName}">attachment.pdf</span></div>
+                    </section>
+                </aside>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

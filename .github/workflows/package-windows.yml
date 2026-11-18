@@ -1,0 +1,30 @@
+name: Package Windows app
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+      - name: Run tests
+        shell: pwsh
+        run: .\gradlew.bat test --no-daemon
+      - name: Build Windows app image
+        shell: pwsh
+        run: .\windows\package-windows.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Maildesk-Windows-x64
+          path: dist/Maildesk-Windows-x64.zip
+          if-no-files-found: error
+          retention-days: 30

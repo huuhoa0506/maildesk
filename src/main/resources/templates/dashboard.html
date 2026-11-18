@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Maildesk · Trường học</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+        <a class="brand" th:href="@{/}"><span class="brand-mark">✉</span><span class="brand-copy"><strong>mail<span>desk</span></strong><small>QUẢN LÝ EMAIL HỌC ĐƯỜNG</small></span></a>
+        <div class="section-heading"><span>TRƯỜNG CỦA TÔI</span><span class="school-count" th:text="${#lists.size(schools)}">0</span></div>
+        <nav class="school-nav" aria-label="Danh sách trường">
+            <a class="school-link" th:each="school : ${schools}" th:href="@{/(schoolId=${school.id})}"
+               th:classappend="${selectedSchool != null and school.id == selectedSchool.id} ? ' is-active' : ''">
+                <span class="school-icon" th:text="${school.initials}">TP</span>
+                <span class="school-copy"><strong th:text="${school.name}">Tên trường</strong><small th:text="${school.senderEmail}">email@school.edu.vn</small></span>
+                <span class="active-dot"></span>
+            </a>
+        </nav>
+        <div class="sidebar-bottom"><a class="settings-link" th:href="@{/schools}"><span>⚙</span> Quản lý trường <span class="settings-arrow">↗</span></a></div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar"><div class="breadcrumbs">Các trường <span>/</span> <strong th:text="${selectedSchool == null ? 'Tổng quan' : selectedSchool.name}">Tổng quan</strong></div><a class="top-link" th:href="@{/schools}">⚙ Cấu hình trường</a></header>
+        <div class="page-content">
+            <div class="flash success" th:if="${success}" th:text="${success}"></div>
+            <div class="flash error" th:if="${error}" th:text="${error}"></div>
+            <section class="page-heading">
+                <div><div class="eyebrow"><span class="eyebrow-dot"></span> KHÔNG GIAN LÀM VIỆC</div>
+                    <h1 th:text="${selectedSchool == null ? 'Bắt đầu với Maildesk' : selectedSchool.name}">Tên trường</h1>
+                    <p class="page-description" th:text="${selectedSchool == null ? 'Thêm cấu hình trường để tạo Reminding và quản lý danh sách học sinh.' : 'Các đợt thông báo và thống kê gửi email của trường.'}">Quản lý đợt thông báo.</p>
+                </div>
+                <a class="button button-primary" th:if="${selectedSchool != null}" th:href="@{/remindings/new(schoolId=${selectedSchool.id})}"><span>＋</span> Tạo Reminding</a>
+            </section>
+
+            <section class="overview-grid" th:if="${selectedSchool != null}">
+                <article class="overview-card"><span class="overview-icon icon-purple">▤</span><span><small>TỔNG REMINDING</small><strong th:text="${#lists.size(remindings)}">0</strong><small>Đợt thông báo</small></span></article>
+                <article class="overview-card"><span class="overview-icon icon-amber">◷</span><span><small>CHỜ GỬI</small><strong th:text="${pendingTotal}">0</strong><small>Email chưa xử lý</small></span></article>
+                <article class="overview-card"><span class="overview-icon icon-green">✓</span><span><small>ĐÃ GỬI</small><strong th:text="${sentTotal}">0</strong><small>Gửi thành công</small></span></article>
+                <article class="overview-card"><span class="overview-icon icon-red">!</span><span><small>GỬI LỖI</small><strong th:text="${failedTotal}">0</strong><small>Cần kiểm tra</small></span></article>
+            </section>
+
+            <section class="panel">
+                <div class="panel-title"><div><h2 th:text="${selectedSchool == null ? 'Chưa có trường nào' : 'Các đợt thông báo'}">Các đợt thông báo</h2><p th:text="${selectedSchool == null ? 'Cấu hình trường đầu tiên để bắt đầu.' : 'Mỗi Reminding lưu riêng nội dung, danh sách và kết quả gửi.'}">Mỗi đợt được lưu riêng.</p></div></div>
+                <div class="empty-state" th:if="${selectedSchool == null}"><div class="empty-symbol">＋</div><strong>Thêm trường để bắt đầu</strong><p>Thiết lập địa chỉ gửi và cấu hình SMTP của trường.</p><a class="button button-primary" th:href="@{/schools}">Quản lý trường</a></div>
+                <div class="empty-state" th:if="${selectedSchool != null and #lists.isEmpty(remindings)}"><div class="empty-symbol">▤</div><strong>Chưa có Reminding nào</strong><p>Tạo đợt thông báo đầu tiên và tải lên danh sách học sinh Excel.</p><a class="button button-primary" th:href="@{/remindings/new(schoolId=${selectedSchool.id})}">＋ Tạo Reminding</a></div>
+                <div class="reminding-grid" th:if="${not #lists.isEmpty(remindings)}">
+                    <a class="reminding-card" th:each="reminding : ${remindings}" th:href="@{/remindings/{id}(id=${reminding.id})}">
+                        <div class="reminding-card-top"><span class="reminding-icon">✉</span><span class="card-arrow">↗</span></div>
+                        <h3 th:text="${reminding.name}">Tên Reminding</h3>
+                        <p class="reminding-subject" th:text="${reminding.subjectTemplate}">Tiêu đề email</p>
+                        <div class="reminding-stats">
+                            <span><strong th:text="${reminding.totalCount}">0</strong> tổng</span>
+                            <span class="text-green"><strong th:text="${reminding.sentCount}">0</strong> đã gửi</span>
+                            <span class="text-amber"><strong th:text="${reminding.pendingCount}">0</strong> chờ</span>
+                            <span class="text-red"><strong th:text="${reminding.failedCount}">0</strong> lỗi</span>
+                        </div>
+                        <div class="reminding-footer"><span th:text="${reminding.senderEmail}">sender@school.edu.vn</span><span th:text="${#strings.substring(reminding.createdAt, 0, 10)}">2026-01-01</span></div>
+                    </a>
+                </div>
+            </section>
+            <footer class="page-footer">Maildesk <span>·</span> Dữ liệu được lưu cục bộ trong SQLite</footer>
+        </div>
+    </main>
+</div>
+</body>
+</html>

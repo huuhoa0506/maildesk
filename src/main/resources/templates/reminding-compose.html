@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Soạn email · Maildesk</title><link rel="stylesheet" th:href="@{/css/dashboard.css}"><script th:src="@{/js/dashboard.js}" defer></script></head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+        <a class="brand" th:href="@{/}"><span class="brand-mark">✉</span><span class="brand-copy"><strong>mail<span>desk</span></strong><small>QUẢN LÝ EMAIL HỌC ĐƯỜNG</small></span></a>
+        <div class="section-heading">TRƯỜNG ĐANG CHỌN</div>
+        <nav class="school-nav"><a class="school-link" th:each="item : ${schools}" th:classappend="${item.id == school.id} ? ' is-active' : ''" th:href="@{/(schoolId=${item.id})}"><span class="school-icon" th:text="${item.initials}">TP</span><span class="school-copy"><strong th:text="${item.name}">Tên trường</strong><small th:text="${item.senderEmail}">email@school.edu.vn</small></span><span class="active-dot"></span></a></nav>
+        <div class="sidebar-bottom"><a class="settings-link" th:href="@{/schools}"><span>⚙</span> Quản lý trường <span class="settings-arrow">↗</span></a></div>
+    </aside>
+    <main class="main-content">
+        <header class="topbar"><div class="breadcrumbs"><a th:href="@{/(schoolId=${school.id})}" th:text="${school.name}">Trường</a><span>/</span><strong>Soạn Reminding</strong></div><span class="top-link" th:text="${#lists.size(draft.agents) + ' Agent hợp lệ'}">0 Agent</span></header>
+        <div class="page-content">
+            <div class="flash error" th:if="${error}" th:text="${error}"></div>
+            <section class="page-heading"><div><div class="eyebrow"><span class="eyebrow-dot"></span> BƯỚC 2 · SOẠN VÀ XEM TRƯỚC</div><h1 th:text="${draft.name}">Tên Reminding</h1><p class="page-description">Mỗi Agent nhận một email; file đính kèm chứa các record của Agent. Biến email được lấy từ record đầu tiên.</p></div></section>
+            <div class="flash warning" th:if="${not #lists.isEmpty(draft.warnings)}"><strong>Một số dòng không được nhập:</strong><ul><li th:each="warning : ${draft.warnings}" th:text="${warning}">Lỗi dòng Excel</li></ul></div>
+            <div class="compose-layout">
+                <form class="panel compose-form" method="post" th:action="@{/remindings}" id="compose-form">
+                    <div class="panel-title"><div><h2>Nội dung email</h2><p>Người gửi: <strong th:text="${school.senderName + ' · ' + school.senderEmail}">Trường</strong></p></div></div>
+                    <div class="form-stack compose-fields">
+                        <label>Tiêu đề<input id="subject-template" name="subject" required th:value="${subject == null ? 'Thông báo từ nhà trường' : subject}" placeholder="Ví dụ: {{Họ tên}} - thông báo từ nhà trường"></label>
+                        <label>Nội dung<textarea id="body-template" name="body" rows="10" required th:text="${body == null ? '' : body}" placeholder="Kính gửi {{Họ tên}},&#10;&#10;Nhà trường xin thông báo đến học sinh lớp {{Lớp}}..."></textarea></label>
+                        <div class="variable-section"><strong>Chèn biến từ file Excel</strong><span>Nhấn vào cột để chèn biến tại vị trí con trỏ.</span><div class="variable-chips"><button class="variable-chip" th:each="column : ${draft.headers}" type="button" th:attr="data-variable=${column}" th:text="${'{{' + column + '}}'}">{{Cột}}</button></div></div>
+                        <div class="form-actions"><a class="button button-secondary" th:href="@{/remindings/new(schoolId=${school.id})}">← Nhập file khác</a><button class="button button-primary" type="submit">Tạo Reminding</button></div>
+                    </div>
+                </form>
+                <aside class="preview-column">
+                    <section class="panel preview-panel">
+                        <div class="panel-title"><div><h2>Xem trước email</h2><p>Mẫu dữ liệu: Agent đầu tiên</p></div></div>
+                        <div class="email-preview">
+                            <div class="preview-from"><span>ĐẾN AGENT</span><strong th:text="${sampleAgent.name + ' · ' + sampleAgent.email}">Agent</strong><small th:text="${sampleAgent.recordCount + ' AgentRecord trong file đính kèm'}">0 records</small></div>
+                            <div class="preview-subject"><span>TIÊU ĐỀ</span><strong id="preview-subject">Thông báo từ nhà trường</strong></div>
+                            <div class="preview-body" id="preview-body">Nội dung email sẽ hiển thị tại đây.</div>
+                        </div>
+                        <div class="preview-data"><strong>Dữ liệu Excel mẫu</strong><div th:each="entry : ${sampleValues}" class="preview-data-row"><span th:text="${entry.key}" th:attr="data-sample-column=${entry.key}">Cột</span><span th:text="${entry.value}" th:attr="data-sample-value=${entry.value}">Giá trị</span></div></div>
+                        <div class="preview-attachment"><span>📎</span><span>File Excel riêng gồm <strong th:text="${sampleAgent.recordCount}">0</strong> AgentRecord sẽ được sinh khi gửi.</span></div>
+                    </section>
+                    <section class="panel imported-card"><span class="overview-icon icon-green">✓</span><div><strong th:text="${#lists.size(draft.agents) + ' Agent đã đọc'}">0 Agent</strong><small th:text="${recordCount + ' AgentRecord đã được nhóm'}">0 AgentRecord</small></div></section>
+                </aside>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

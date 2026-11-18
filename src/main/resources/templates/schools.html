@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Maildesk · Quản lý trường</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+        <a class="brand" th:href="@{/}"><span class="brand-mark">✉</span><span class="brand-copy"><strong>mail<span>desk</span></strong><small>QUẢN LÝ EMAIL HỌC ĐƯỜNG</small></span></a>
+        <div class="section-heading"><span>TRƯỜNG CỦA TÔI</span><span class="school-count" th:text="${#lists.size(schools)}">0</span></div>
+        <nav class="school-nav" aria-label="Danh sách trường">
+            <a class="school-link" th:each="school : ${schools}" th:href="@{/(schoolId=${school.id})}">
+                <span class="school-icon" th:text="${school.initials}">TP</span><span class="school-copy"><strong th:text="${school.name}">Tên trường</strong><small th:text="${school.senderEmail}">email@school.edu.vn</small></span>
+            </a>
+        </nav>
+        <div class="sidebar-bottom"><a class="settings-link is-active" th:href="@{/schools}"><span>⚙</span> Quản lý trường <span class="settings-arrow">↗</span></a></div>
+    </aside>
+    <main class="main-content">
+        <header class="topbar"><div class="breadcrumbs"><a th:href="@{/}">Các trường</a><span>/</span><strong>Quản lý trường</strong></div><a class="top-link" th:href="@{/}">← Trở về</a></header>
+        <div class="page-content">
+            <div class="flash success" th:if="${success}" th:text="${success}"></div><div class="flash error" th:if="${error}" th:text="${error}"></div>
+            <div class="flash warning" th:if="${mailLogMode}">Đang bật chế độ log. Email sẽ không được gửi thật, nhưng các email render thành công vẫn được ghi nhận là Đã gửi để kiểm thử trạng thái và thống kê. Đổi <code>app.mail.delivery-mode</code> thành <code>smtp</code> trong <code>application.properties</code> khi sẵn sàng gửi thật.</div>
+            <section class="page-heading"><div><div class="eyebrow"><span class="eyebrow-dot"></span> CÀI ĐẶT</div><h1>Quản lý trường</h1><p class="page-description">Cấu hình tài khoản gửi riêng cho từng trường. App password được mã hóa trước khi lưu.</p></div></section>
+            <section class="panel">
+                <div class="panel-title"><div><h2>Thêm trường</h2><p>SMTP thường dùng cổng 587 với STARTTLS.</p></div></div>
+                <form class="school-form" method="post" th:action="@{/schools}">
+                    <div class="form-grid">
+                        <label>Tên trường<input name="name" required placeholder="Ví dụ: THPT Trần Phú"></label>
+                        <label>Tên người gửi<input name="senderName" required placeholder="Ví dụ: Trường THPT Trần Phú"></label>
+                        <label>Email gửi<input name="senderEmail" type="email" required placeholder="thongbao@truong.edu.vn"></label>
+                        <label>SMTP host<input name="smtpHost" required placeholder="smtp.gmail.com"></label>
+                        <label>SMTP port<input name="smtpPort" type="number" min="1" max="65535" value="587" required></label>
+                        <label>SMTP username<input name="smtpUsername" required placeholder="Tài khoản SMTP"></label>
+                        <label class="form-span">App password<input name="appPassword" type="password" autocomplete="new-password" placeholder="Chỉ nhập app password, không phải mật khẩu email" required></label>
+                        <label class="checkbox-label"><input name="smtpStarttls" type="checkbox" value="true" checked> Bật STARTTLS</label>
+                    </div>
+                    <p class="form-note">App password không được hiển thị lại sau khi lưu. Khóa mã hóa cần được cấu hình qua biến môi trường APP_ENCRYPTION_KEY.</p>
+                    <div class="form-actions"><button class="button button-primary" type="submit">Lưu trường</button></div>
+                </form>
+            </section>
+
+            <section class="panel school-list-panel">
+                <div class="panel-title"><div><h2>Trường đã cấu hình</h2><p th:text="${#lists.size(schools) + ' trường'}">0 trường</p></div></div>
+                <div class="no-schools" th:if="${#lists.isEmpty(schools)}">Chưa có trường nào được thêm.</div>
+                <details class="school-config" th:each="school : ${schools}">
+                    <summary><span class="school-icon" th:text="${school.initials}">TP</span><span class="school-summary"><strong th:text="${school.name}">Tên trường</strong><small th:text="${school.senderEmail}">email@school.edu.vn</small></span><span class="config-indicator" th:classappend="${school.hasPassword} ? ' configured' : ''" th:text="${school.hasPassword} ? 'SMTP đã có mật khẩu' : 'Chưa lưu mật khẩu'">SMTP</span></summary>
+                    <form class="school-form edit-form" method="post" th:action="@{/schools}">
+                        <input type="hidden" name="id" th:value="${school.id}">
+                        <div class="form-grid">
+                            <label>Tên trường<input name="name" th:value="${school.name}" required></label>
+                            <label>Tên người gửi<input name="senderName" th:value="${school.senderName}" required></label>
+                            <label>Email gửi<input name="senderEmail" type="email" th:value="${school.senderEmail}" required></label>
+                            <label>SMTP host<input name="smtpHost" th:value="${school.smtpHost}" required></label>
+                            <label>SMTP port<input name="smtpPort" type="number" min="1" max="65535" th:value="${school.smtpPort}" required></label>
+                            <label>SMTP username<input name="smtpUsername" th:value="${school.smtpUsername}" required></label>
+                            <label class="form-span">Thay app password<input name="appPassword" type="password" autocomplete="new-password" placeholder="Để trống để giữ app password hiện tại"></label>
+                            <label class="checkbox-label"><input name="smtpStarttls" type="checkbox" value="true" th:checked="${school.smtpStarttls}"> Bật STARTTLS</label>
+                        </div>
+                        <div class="form-actions"><button class="button button-secondary" type="submit" th:formaction="@{/schools/{id}/test(id=${school.id})}" formmethod="post">Kiểm tra SMTP</button><button class="button button-primary" type="submit">Lưu thay đổi</button></div>
+                    </form>
+                </details>
+            </section>
+        </div>
+    </main>
+</div>
+</body>
+</html>
