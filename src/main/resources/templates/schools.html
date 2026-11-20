@@ -31,6 +31,7 @@
                         <label>Tên trường<input name="name" required placeholder="Ví dụ: THPT Trần Phú"></label>
                         <label>Tên người gửi<input name="senderName" required placeholder="Ví dụ: Trường THPT Trần Phú"></label>
                         <label>Email gửi<input name="senderEmail" type="email" required placeholder="thongbao@truong.edu.vn"></label>
+                        <label>Email CC (không bắt buộc)<input name="ccEmail" type="email" placeholder="cc@truong.edu.vn"></label>
                         <label>SMTP host<input name="smtpHost" required placeholder="smtp.gmail.com"></label>
                         <label>SMTP port<input name="smtpPort" type="number" min="1" max="65535" value="587" required></label>
                         <label>SMTP username<input name="smtpUsername" required placeholder="Tài khoản SMTP"></label>
@@ -53,6 +54,7 @@
                             <label>Tên trường<input name="name" th:value="${school.name}" required></label>
                             <label>Tên người gửi<input name="senderName" th:value="${school.senderName}" required></label>
                             <label>Email gửi<input name="senderEmail" type="email" th:value="${school.senderEmail}" required></label>
+                            <label>Email CC (không bắt buộc)<input name="ccEmail" type="email" th:value="${school.ccEmail}"></label>
                             <label>SMTP host<input name="smtpHost" th:value="${school.smtpHost}" required></label>
                             <label>SMTP port<input name="smtpPort" type="number" min="1" max="65535" th:value="${school.smtpPort}" required></label>
                             <label>SMTP username<input name="smtpUsername" th:value="${school.smtpUsername}" required></label>

@@ -79,7 +79,7 @@ public class MailQueueWorker {
             WorkspaceService.School school = workspace.school(reminding.schoolId())
                     .orElseThrow(() -> new IllegalStateException("Không tìm thấy trường."));
             JavaMailSender sender = mailDeliveryService.isLogMode() ? null : mailDeliveryService.prepare(school);
-            mailDeliveryService.send(sender, reminding, agent, workspace.rowValues(agent));
+            mailDeliveryService.send(sender, school, reminding, agent, workspace.rowValues(agent));
             succeeded = true;
         } catch (Exception exception) {
             failure = exception.getMessage() == null || exception.getMessage().isBlank()

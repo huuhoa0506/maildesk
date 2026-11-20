@@ -78,12 +78,14 @@ public class MailDeliveryService {
 
     public void send(
             JavaMailSender sender,
+            WorkspaceService.School school,
             WorkspaceService.Reminding reminding,
             WorkspaceService.Agent agent,
             Map<String, String> rowValues) throws Exception {
         String subject = renderText(reminding.subjectTemplate(), rowValues);
         String body = renderHtml(reminding.bodyTemplate(), rowValues);
         boolean generatedWorkbook = agent.generatedWorkbook();
+        String ccEmail = school.ccEmail();
         byte[] generatedAttachment = generatedWorkbook
                 ? agentWorkbookService.create(agent.email(), agent.records())
                 : null;
@@ -92,8 +94,9 @@ public class MailDeliveryService {
             String attachment = generatedWorkbook
                     ? generatedFilename + " (" + agent.recordCount() + " records, " + generatedAttachment.length + " bytes)"
                     : StringUtils.hasText(reminding.attachmentName()) ? reminding.attachmentName() : "(không có)";
-            logger.info("MAIL LOG | from={} | to={} | subject={} | attachment={} | body={}",
-                    logValue(reminding.senderEmail()), logValue(agent.email()), logValue(subject),
+            logger.info("MAIL LOG | from={} | to={} | cc={} | subject={} | attachment={} | body={}",
+                    logValue(reminding.senderEmail()), logValue(agent.email()),
+                    StringUtils.hasText(ccEmail) ? logValue(ccEmail) : "(không có)", logValue(subject),
                     logValue(attachment), logValue(body));
             return;
         }
@@ -102,6 +105,9 @@ public class MailDeliveryService {
         MimeMessageHelper helper = new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());
         helper.setFrom(new InternetAddress(reminding.senderEmail(), reminding.senderName(), StandardCharsets.UTF_8.name()));
         helper.setTo(agent.email());
+        if (StringUtils.hasText(ccEmail)) {
+            helper.setCc(ccEmail);
+        }
         helper.setSubject(subject);
         helper.setText(body, true);
 

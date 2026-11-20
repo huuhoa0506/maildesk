@@ -32,6 +32,9 @@ public class SchoolEntity {
     @Column(name = "sender_email", nullable = false)
     private String senderEmail;
 
+    @Column(name = "cc_email")
+    private String ccEmail;
+
     @Column(name = "smtp_host", nullable = false)
     private String smtpHost;
 
@@ -56,11 +59,12 @@ public class SchoolEntity {
     protected SchoolEntity() {
     }
 
-    public SchoolEntity(String name, String senderName, String senderEmail, String smtpHost, int smtpPort,
-            String smtpUsername, String encryptedPassword, boolean smtpStarttls) {
+    public SchoolEntity(String name, String senderName, String senderEmail, String ccEmail, String smtpHost,
+            int smtpPort, String smtpUsername, String encryptedPassword, boolean smtpStarttls) {
         this.name = name;
         this.senderName = senderName;
         this.senderEmail = senderEmail;
+        this.ccEmail = ccEmail;
         this.smtpHost = smtpHost;
         this.smtpPort = smtpPort;
         this.smtpUsername = smtpUsername;
@@ -79,6 +83,7 @@ public class SchoolEntity {
     public String getName() { return name; }
     public String getSenderName() { return senderName; }
     public String getSenderEmail() { return senderEmail; }
+    public String getCcEmail() { return ccEmail; }
     public String getSmtpHost() { return smtpHost; }
     public int getSmtpPort() { return smtpPort; }
     public String getSmtpUsername() { return smtpUsername; }
@@ -86,11 +91,12 @@ public class SchoolEntity {
     public boolean isSmtpStarttls() { return smtpStarttls; }
     public LocalDateTime getCreatedAt() { return createdAt; }
 
-    public void update(String name, String senderName, String senderEmail, String smtpHost, int smtpPort,
-            String smtpUsername, String encryptedPassword, boolean smtpStarttls) {
+    public void update(String name, String senderName, String senderEmail, String ccEmail, String smtpHost,
+            int smtpPort, String smtpUsername, String encryptedPassword, boolean smtpStarttls) {
         this.name = name;
         this.senderName = senderName;
         this.senderEmail = senderEmail;
+        this.ccEmail = ccEmail;
         this.smtpHost = smtpHost;
         this.smtpPort = smtpPort;
         this.smtpUsername = smtpUsername;

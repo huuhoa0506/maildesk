@@ -51,14 +51,14 @@ public class WorkspaceService {
         SchoolEntity entity;
         if (input.id() == null) {
             entity = new SchoolEntity(input.name().trim(), input.senderName().trim(), input.senderEmail().trim(),
-                    input.smtpHost().trim(), input.smtpPort(), input.smtpUsername().trim(), encryptedPassword,
-                    input.smtpStarttls());
+                    normalizeOptionalEmail(input.ccEmail()), input.smtpHost().trim(), input.smtpPort(),
+                    input.smtpUsername().trim(), encryptedPassword, input.smtpStarttls());
         } else {
             entity = schoolRepository.findById(input.id())
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy trường cần cập nhật."));
             entity.update(input.name().trim(), input.senderName().trim(), input.senderEmail().trim(),
-                    input.smtpHost().trim(), input.smtpPort(), input.smtpUsername().trim(), encryptedPassword,
-                    input.smtpStarttls());
+                    normalizeOptionalEmail(input.ccEmail()), input.smtpHost().trim(), input.smtpPort(),
+                    input.smtpUsername().trim(), encryptedPassword, input.smtpStarttls());
         }
         return toSchool(schoolRepository.save(entity));
     }
@@ -178,8 +178,12 @@ public class WorkspaceService {
 
     private School toSchool(SchoolEntity entity) {
         return new School(entity.getId(), entity.getName(), entity.getSenderName(), entity.getSenderEmail(),
-                entity.getSmtpHost(), entity.getSmtpPort(), entity.getSmtpUsername(), entity.getEncryptedPassword(),
-                entity.isSmtpStarttls());
+                entity.getCcEmail(), entity.getSmtpHost(), entity.getSmtpPort(), entity.getSmtpUsername(),
+                entity.getEncryptedPassword(), entity.isSmtpStarttls());
+    }
+
+    private String normalizeOptionalEmail(String email) {
+        return email == null || email.isBlank() ? null : email.trim();
     }
 
     private Reminding toReminding(RemindingEntity entity) {
@@ -217,8 +221,8 @@ public class WorkspaceService {
     }
 
     public record School(
-            long id, String name, String senderName, String senderEmail, String smtpHost, int smtpPort,
-            String smtpUsername, String encryptedPassword, boolean smtpStarttls) {
+            long id, String name, String senderName, String senderEmail, String ccEmail, String smtpHost,
+            int smtpPort, String smtpUsername, String encryptedPassword, boolean smtpStarttls) {
         public String initials() {
             String[] words = name.trim().split("\\s+");
             if (words.length == 1) {
@@ -232,8 +236,8 @@ public class WorkspaceService {
         }
     }
 
-    public record SchoolInput(Long id, String name, String senderName, String senderEmail, String smtpHost,
-            int smtpPort, String smtpUsername, boolean smtpStarttls) {
+    public record SchoolInput(Long id, String name, String senderName, String senderEmail, String ccEmail,
+            String smtpHost, int smtpPort, String smtpUsername, boolean smtpStarttls) {
     }
 
     public record Reminding(

@@ -80,6 +80,7 @@ public class MailDashboardController {
             @RequestParam String name,
             @RequestParam String senderName,
             @RequestParam String senderEmail,
+            @RequestParam(required = false) String ccEmail,
             @RequestParam String smtpHost,
             @RequestParam int smtpPort,
             @RequestParam String smtpUsername,
@@ -90,6 +91,10 @@ public class MailDashboardController {
             if (name.isBlank() || senderName.isBlank() || !senderEmail.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
                 throw new IllegalArgumentException("Vui lòng nhập tên trường, tên người gửi và email hợp lệ.");
             }
+            if (ccEmail != null && !ccEmail.isBlank()
+                    && !ccEmail.trim().matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
+                throw new IllegalArgumentException("Vui lòng nhập email CC hợp lệ hoặc để trống.");
+            }
             if (smtpHost.isBlank() || smtpPort < 1 || smtpPort > 65535 || smtpUsername.isBlank()) {
                 throw new IllegalArgumentException("Vui lòng nhập SMTP host, port (1–65535) và username hợp lệ.");
             }
@@ -97,7 +102,8 @@ public class MailDashboardController {
                     ? null
                     : encryptionService.encrypt(appPassword);
             WorkspaceService.School school = workspace.saveSchool(new WorkspaceService.SchoolInput(
-                    id, name, senderName, senderEmail, smtpHost, smtpPort, smtpUsername, smtpStarttls), encryptedPassword);
+                    id, name, senderName, senderEmail, ccEmail, smtpHost, smtpPort, smtpUsername, smtpStarttls),
+                    encryptedPassword);
             redirect.addFlashAttribute("success", "Đã lưu cấu hình " + school.name() + ".");
         } catch (IllegalArgumentException | IllegalStateException exception) {
             redirect.addFlashAttribute("error", exception.getMessage());

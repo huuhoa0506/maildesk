@@ -48,7 +48,7 @@ class WorkspacePersistenceTests {
 
         assertTrue(mailDeliveryService.isLogMode());
         assertDoesNotThrow(() -> mailDeliveryService.send(
-                null, reminding, agent, java.util.Map.of("Name", "Student", "CourseName", "Course")));
+                null, testSchool(null), reminding, agent, java.util.Map.of("Name", "Student", "CourseName", "Course")));
 
         WorkspaceService.Agent agentWithRecords = new WorkspaceService.Agent(
                 2L, 1L, "Agent", "agent@example.test",
@@ -67,7 +67,7 @@ class WorkspacePersistenceTests {
                         java.util.Map.entry("Total Due Amt", "100")))),
                 1, true, "pending", "2026-11-18T00:00:00", null, null);
         assertDoesNotThrow(() -> mailDeliveryService.send(
-                null, reminding, agentWithRecords, agentWithRecords.records().get(0).values()));
+                null, testSchool(null), reminding, agentWithRecords, agentWithRecords.records().get(0).values()));
     }
 
     @Test
@@ -85,10 +85,13 @@ class WorkspacePersistenceTests {
                 List.of(new WorkspaceService.AgentRecord(Map.of())), 1, false,
                 "pending", "2026-11-18T00:00:00", null, null);
 
-        smtpDelivery.send(sender, reminding, agent, Map.of());
+        smtpDelivery.send(sender, testSchool("copy@example.test"), reminding, agent, Map.of());
 
         assertEquals("recipient-two@example.test",
                 ((jakarta.mail.internet.InternetAddress) message.getRecipients(Message.RecipientType.TO)[0])
+                        .getAddress());
+        assertEquals("copy@example.test",
+                ((jakarta.mail.internet.InternetAddress) message.getRecipients(Message.RecipientType.CC)[0])
                         .getAddress());
         verify(sender).send(message);
     }
@@ -97,8 +100,10 @@ class WorkspacePersistenceTests {
     void persistsSchoolRemindingAndAgentsThroughJpaRepositories() throws Exception {
         WorkspaceService.School school = workspace.saveSchool(
                 new WorkspaceService.SchoolInput(null, "JPA Test School", "Test School",
-                        "jpa-test@example.edu", "smtp.example.edu", 587, "jpa-test@example.edu", true),
+                        "jpa-test@example.edu", "copy@example.edu", "smtp.example.edu", 587,
+                        "jpa-test@example.edu", true),
                 null);
+        assertEquals("copy@example.edu", workspace.school(school.id()).orElseThrow().ccEmail());
 
         WorkspaceService.Reminding reminding = workspace.createReminding(school.id(), "Monthly Notice",
                 "Hello {{Họ tên}}", "Class {{Lớp}}", List.of(
@@ -124,7 +129,8 @@ class WorkspacePersistenceTests {
     void queuesSelectedAgentsAndPreventsOverlappingJobsForOneReminding() throws Exception {
         WorkspaceService.School school = workspace.saveSchool(
                 new WorkspaceService.SchoolInput(null, "Queue Test School", "Queue Test",
-                        "queue-test@example.edu", "smtp.example.edu", 587, "queue-test@example.edu", true),
+                        "queue-test@example.edu", null, "smtp.example.edu", 587,
+                        "queue-test@example.edu", true),
                 null);
         WorkspaceService.Reminding reminding = workspace.createReminding(school.id(), "Queued Notice",
                 "Hello {{Họ tên}}", "Class {{Lớp}}", List.of(
@@ -158,5 +164,10 @@ class WorkspacePersistenceTests {
         assertEquals(2, complete.processed());
         assertEquals(1, complete.succeeded());
         assertEquals(1, complete.failed());
+    }
+
+    private WorkspaceService.School testSchool(String ccEmail) {
+        return new WorkspaceService.School(1L, "Test School", "School", "school@example.test", ccEmail,
+                "smtp.example.test", 587, "smtp-user", null, true);
     }
 }
